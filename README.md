@@ -25,7 +25,7 @@ https://zenn.dev/take_tech/articles/32188cd3607721
 
 
 ## 使い方
-- AWS CLIのプロファイルを指定
+- AWS CLIのプロファイルをTerraform操作用のIAMユーザー(gourmet-liff-app-terraform)に指定
 ```bash
 export AWS_PROFILE=プロファイル名
 ```
