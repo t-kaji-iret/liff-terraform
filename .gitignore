@@ -1,0 +1,2 @@
+resource/.terraform
+resource/terraform.tfstate*
