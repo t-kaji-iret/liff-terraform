@@ -10,9 +10,15 @@ terraform {
       version = ">= 5.61.0"
     }
   }
+
+  backend "s3" {
+    bucket = "gourmet-liff-app-terraform-state-bucket"
+    key = "terraform.tfstate"
+    region = "ap-northeast-1"
+  }
 }
 
 provider "aws" {
   # providerで利用するリージョンを指定
-  region  = "ap-northeast-1"
+  region = "ap-northeast-1"
 }
