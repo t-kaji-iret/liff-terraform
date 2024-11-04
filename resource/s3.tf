@@ -5,6 +5,31 @@
 module "backend-source-private-bucket" {
   source = "terraform-aws-modules/s3-bucket/aws"
   bucket = "gourmet-liff-app-backend-source-public-bucket"
+
+  attach_policy = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          "AWS" : [
+            "arn:aws:iam::328715503375:user/t-miura",
+            "arn:aws:iam::328715503375:user/adachi"
+          ]
+        }
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          module.backend-source-private-bucket.s3_bucket_arn,
+          "${module.backend-source-private-bucket.s3_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
 }
 
 # NOTE: OACを設定して、バケットポリシーでOACからのアクセスのみを許可するように制御する設計
