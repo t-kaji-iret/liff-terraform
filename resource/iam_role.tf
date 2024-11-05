@@ -6,7 +6,7 @@ resource "aws_iam_role" "bastion" {
   name               = "gourmet-liff-app-bastion-instance-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
-resource "aws_iam_role_policy_attachment" "bastion" {
+resource "aws_iam_role_policy_attachment" "bastion_ssm" {
   role       = aws_iam_role.bastion.name
   policy_arn = data.aws_iam_policy.systems_manager.arn
 }
@@ -17,8 +17,23 @@ resource "aws_iam_role" "lambda" {
   name               = "gourmet-liff-app-lambda-role"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
-// NOTE: Lambdaへのポリシーアタッチは以下で設定する
-# resource "aws_iam_role_policy_attachment" "lambda" {
-#   role       = aws_iam_role.lambda.name
-#   policy_arn = data.aws_iam_policy.systems_manager.arn
-# }
+resource "aws_iam_role_policy_attachment" "lambda" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = data.aws_iam_policy.lambda_execution.arn
+}
+resource "aws_iam_role_policy_attachment" "lambda_rds" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = data.aws_iam_policy.rds.arn
+}
+resource "aws_iam_role_policy_attachment" "lambda_s3" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = data.aws_iam_policy.s3.arn
+}
+resource "aws_iam_role_policy_attachment" "lambda_secrets_manager" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = aws_iam_policy.secrets_manager_policy.arn
+}
+resource "aws_iam_role_policy_attachment" "lambda_kms" {
+  role       = aws_iam_role.lambda.name
+  policy_arn = aws_iam_policy.kms_policy.arn
+}
