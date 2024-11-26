@@ -1,43 +1,98 @@
-# プライベートバケット
-
-# バックエンドのソースを保存する
+#########################
+# S3
+#########################
 # NOTE: バケットポリシーではなくLambdaやIAMユーザーなどアクセスする側に権限付与する設計
-resource "aws_s3_bucket" "private-backend" {
-  bucket = "gourmet-liff-app-backend-source-bucket"
-}
-resource "aws_s3_bucket_public_access_block" "private-backend" {
-  bucket = aws_s3_bucket.private-backend.id
+module "backend-source-private-bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+  bucket = "gourmet-liff-app-backend-source-public-bucket"
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  attach_policy = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          "AWS" : [
+            "arn:aws:iam::328715503375:user/t-miura",
+            "arn:aws:iam::328715503375:user/adachi"
+          ]
+        }
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          module.backend-source-private-bucket.s3_bucket_arn,
+          "${module.backend-source-private-bucket.s3_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
 }
 
-# NOTE: OAIを設定して、バケットポリシーでOAIからのアクセスのみを許可するように制御する設計
-# TODO: CloudFront、OAC、OACからのアクセスを許可するバケットポリシーするの作成が必要(OACはバケットポリシーじゃないと制御できない)
-# フロントエンドのソースを保存するバケット
-resource "aws_s3_bucket" "private-frontend" {
-  bucket = "gourmet-liff-app-frontend-source-bucket"
-}
-resource "aws_s3_bucket_public_access_block" "private-frontend" {
-  bucket = aws_s3_bucket.private-frontend.id
+# NOTE: OACを設定して、バケットポリシーでOACからのアクセスのみを許可するように制御する設計
+module "frontend-source-private-bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+  bucket = "gourmet-liff-app-frontend-source-private-bucket"
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  attach_policy = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          "Service" : "cloudfront.amazonaws.com"
+        }
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          module.frontend-source-private-bucket.s3_bucket_arn,
+          "${module.frontend-source-private-bucket.s3_bucket_arn}/*"
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = module.cloudfront.cloudfront_distribution_arn
+          }
+        }
+      }
+    ]
+  })
 }
 
-# 画像を保存するバケット
-resource "aws_s3_bucket" "private-photo" {
-  bucket = "gourmet-liff-app-photo-bucket"
-}
-resource "aws_s3_bucket_public_access_block" "private-photo" {
-  bucket = aws_s3_bucket.private-photo.id
+module "photo-private-bucket" {
+  source = "terraform-aws-modules/s3-bucket/aws"
+  bucket = "gourmet-liff-app-photo-private-bucket"
 
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
+  attach_policy = true
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          "Service" : "cloudfront.amazonaws.com"
+        }
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Resource = [
+          module.photo-private-bucket.s3_bucket_arn,
+          "${module.photo-private-bucket.s3_bucket_arn}/*"
+        ]
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = module.cloudfront.cloudfront_distribution_arn
+          }
+        }
+      }
+    ]
+  })
 }
