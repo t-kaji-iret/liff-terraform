@@ -27,6 +27,17 @@ module "cloudfront" {
       origin_id   = "photo"
       origin_access_control_id = module.cloudfront.cloudfront_origin_access_controls_ids[0]
     }
+
+    api = {
+      domain_name = "d8gk9sqzv5.execute-api.ap-northeast-1.amazonaws.com"
+      origin_id   = "api"
+      custom_origin_config = {
+        http_port = "80"
+        https_port = "443"
+        origin_protocol_policy = "match-viewer" // TODO: APIGatewayに証明書設定したらhttps-onlyにする
+        origin_ssl_protocols   = ["TLSv1.2"]
+      }
+    }
   }
 
   default_root_object = "index.html"
@@ -43,6 +54,14 @@ module "cloudfront" {
     {
       path_pattern           = "/photo/*"
       target_origin_id       = "photo"
+      allowed_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+      cached_methods = ["HEAD", "GET", "OPTIONS"]
+      viewer_protocol_policy = "redirect-to-https"
+      compress               = true
+    },
+    {
+      path_pattern           = "/prod/api/*"
+      target_origin_id       = "api"
       allowed_methods = ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
       cached_methods = ["HEAD", "GET", "OPTIONS"]
       viewer_protocol_policy = "redirect-to-https"
